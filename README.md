@@ -1,6 +1,8 @@
 # speedcomplainer
 A python app that will test your internet connection and then complain to your service provider (and log to a data store if you'd like)
 
+Forked with modifications.
+
 ## Configuration
 Configuration is handled by a basic JSON file. Things that can be configured are:
 * twitter
@@ -51,5 +53,24 @@ CSV Logging config example:
 Or to run in the background:
 
 > python speedcomplainer.py > /dev/null &
+
+Or
+
+>python speed_tester.py
+>    -p, --ping: ping test
+>    -s, --speed: speed test
+
+These can also be found by using -h
+
+Additionally, you can compile the results (for the previous day only) in an ASCII graph with basic statistics by using
+> python compile_results.py
+
+
+Requirements:
+* Python 2.7
+* GnuPlot 4.6.6-3
+* speedtest-cli 0.3.4-1
+* Packages listed in requirements.txt
+
 
 

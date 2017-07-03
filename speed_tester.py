@@ -10,72 +10,10 @@ import twitter
 import json 
 import random
 from logger import Logger
+from optparse import OptionParser
 
-shutdownFlag = False
-
-def main(filename, argv):
-    print "======================================"
-    print " Starting Speed Complainer!           "
-    print " Lets get noisy!                      "
-    print "======================================"
-
-    global shutdownFlag
-    signal.signal(signal.SIGINT, shutdownHandler)
-
-    monitor = Monitor()
-
-    while not shutdownFlag:
-        try:
-
-            monitor.run()
-
-            for i in range(0, 5):
-                if shutdownFlag:
-                    break
-                time.sleep(1)
-
-        except Exception as e:
-            print 'Error: %s' % e
-            sys.exit(1)
-
-    sys.exit()
-
-def shutdownHandler(signo, stack_frame):
-    global shutdownFlag
-    print 'Got shutdown signal (%s: %s).' % (signo, stack_frame)
-    shutdownFlag = True
-
-class Monitor():
-    def __init__(self):
-        self.lastPingCheck = None
-        self.lastSpeedTest = None
-
-    def run(self):
-        runners = []
-        if not self.lastPingCheck or (datetime.now() - self.lastPingCheck).total_seconds() >= 60:
-            self.lastPingCheck = datetime.now()
-            runners.append(self.runPingTest())
-            
-
-        if not self.lastSpeedTest or (datetime.now() - self.lastSpeedTest).total_seconds() >= 300:
-            self.lastSpeedTest = datetime.now()
-            runners.append(self.runSpeedTest())
-        
-        [cur.join() for cur in runners]
-
-    def runPingTest(self):
-        pingThread = PingTest()
-        pingThread.start()
-        return pingThread
-
-    def runSpeedTest(self):
-        speedThread = SpeedTest()
-        speedThread.start()
-        return speedThread
-
-class PingTest(multiprocessing.Process):
+class PingTest():
     def __init__(self, numPings=3, pingTimeout=2, maxWaitTime=6):
-        super(PingTest, self).__init__()
         self.numPings = numPings
         self.pingTimeout = pingTimeout
         self.maxWaitTime = maxWaitTime
@@ -96,9 +34,8 @@ class PingTest(multiprocessing.Process):
     def logPingResults(self, pingResults):
         self.logger.log([ pingResults['date'].strftime('%Y-%m-%d'),pingResults['date'].strftime('%H:%M:%S'), str(pingResults['success'])])
 
-class SpeedTest(multiprocessing.Process):
+class SpeedTest():
     def __init__(self):
-        super(SpeedTest, self).__init__()
         self.config = json.load(open('./config.json'))
         self.logger = Logger(self.config['log']['type'], { 'filename': self.config['log']['files']['speed'] })
 
@@ -148,32 +85,19 @@ class SpeedTest(multiprocessing.Process):
                             access_token_secret=self.config['twitter']['twitterTokenSecret'])
             if api:
                 status = api.PostUpdate(message)
-
-class DaemonApp():
-    def __init__(self, pidFilePath, stdout_path='/dev/null', stderr_path='/dev/null'):
-        self.stdin_path = '/dev/null'
-        self.stdout_path = stdout_path
-        self.stderr_path = stderr_path
-        self.pidfile_path = pidFilePath
-        self.pidfile_timeout = 1
-
-    def run(self):
-        main(__file__, sys.argv[1:])
-
-if __name__ == '__main__':
-    main(__file__, sys.argv[1:])
-
-    workingDirectory = os.path.basename(os.path.realpath(__file__))
-    stdout_path = '/dev/null'
-    stderr_path = '/dev/null'
-    fileName, fileExt = os.path.split(os.path.realpath(__file__))
-    pidFilePath = os.path.join(workingDirectory, os.path.basename(fileName) + '.pid')
-    from daemon import runner
-    dRunner = runner.DaemonRunner(DaemonApp(pidFilePath, stdout_path, stderr_path))
-    dRunner.daemon_context.working_directory = workingDirectory
-    dRunner.daemon_context.umask = 0o002
-    dRunner.daemon_context.signal_map = { signal.SIGTERM: 'terminate', signal.SIGUP: 'terminate' }
-    dRunner.do_action()
-
-
-
+                
+if __name__ == "__main__":
+    option_parser = OptionParser(usage="usage: %prog [flags]")
+    option_parser.add_option('-p', '--ping', action='store_true', dest='ping', help='Do a ping test.')
+    option_parser.add_option('-s', '--speed', action='store_true', dest='speed', help='Do a speed test')
+    
+    (options, args) = option_parser.parse_args()
+    
+    if options.ping:
+        pinger = PingTest()
+        pinger.run()
+    if options.speed:
+        speeder = SpeedTest()
+        speeder.run()
+                
+                
