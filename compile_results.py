@@ -2,6 +2,7 @@ import datetime
 import numpy as np
 import gnuplotlib as gp
 import csv
+from os import remove
 
 
 def get_results():
@@ -26,7 +27,10 @@ def analysis(data, field):
 def plotter(data, field):
     if field not in data[0].keys():
         raise Exception("Fieldname not found.")
-    gp.plot((np.array(range(len(data))), np.array([float(x[field]) for x in data]), {'with': 'lines'}), terminal = 'dumb 200, 40', unset = 'grid')
+    gp.plot((np.array(range(len(data))), np.array([float(x[field]) for x in data]), {'with': 'lines'}), terminal = 'dumb 200, 40', unset = 'grid', ascii=True, output="temp.txt")
+    with open("temp.txt", "r") as fp:
+        print fp.read()
+    remove("temp.txt")
     return
 
 def uptime():
