@@ -69,7 +69,6 @@ Additionally, you can compile the results (for the previous day only) in an ASCI
 Requirements:
 * Python 2.7
 * GnuPlot 4.6.6-3
-* speedtest-cli 0.3.4-1
 * Packages listed in requirements.txt
 
 

@@ -11,6 +11,7 @@ import json
 import random
 from logger import Logger
 from optparse import OptionParser
+from speedtest import Speedtest
 
 class PingTest():
     def __init__(self, numPings=3, pingTimeout=2, maxWaitTime=6):
@@ -46,24 +47,22 @@ class SpeedTest():
 
     def doSpeedTest(self):
         # run a speed test
-        result = os.popen("speedtest-cli --simple").read()
-        if 'Cannot' in result:
-            return { 'date': datetime.now(), 'uploadResult': 0, 'downloadResult': 0, 'ping': 0 }
+       
+        s = Speedtest()
+        try:
+            s.get_best_server()
+        except:
+            return { 'date': datetime.now(), 'uploadResult': 0, 'downloadResult': 0, 'ping': -1 }
+        
+        s.download()
+        s.upload()
+		
+        results = s.results.dict()
+        pingResult = results['ping']
+        downloadResult = float("{0:.2f}".format(results['download']/1e6))
+        uploadResult = float("{0:.2f}".format(results['upload']/1e6))
 
-        # Result:
-        # Ping: 529.084 ms
-        # Download: 0.52 Mbit/s
-        # Upload: 1.79 Mbit/s
-
-        resultSet = result.split('\n')
-        pingResult = resultSet[0]
-        downloadResult = resultSet[1]
-        uploadResult = resultSet[2]
-
-        pingResult = float(pingResult.replace('Ping: ', '').replace(' ms', ''))
-        downloadResult = float(downloadResult.replace('Download: ', '').replace(' Mbit/s', ''))
-        uploadResult = float(uploadResult.replace('Upload: ', '').replace(' Mbit/s', ''))
-
+        
         return { 'date': datetime.now(), 'uploadResult': uploadResult, 'downloadResult': downloadResult, 'ping': pingResult }
 
     def logSpeedTestResults(self, speedTestResults):
