@@ -12,6 +12,7 @@ import random
 from logger import Logger
 from optparse import OptionParser
 from speedtest import Speedtest
+from socket import setdefaulttimeout
 
 class PingTest():
     def __init__(self, numPings=3, pingTimeout=2, maxWaitTime=6):
@@ -47,15 +48,16 @@ class SpeedTest():
 
     def doSpeedTest(self):
         # run a speed test
-       
-        s = Speedtest()
+        setdefaulttimeout(60)
         try:
+            s = Speedtest()
             s.get_best_server()
+            s.download()
+            s.upload()
         except:
             return { 'date': datetime.now(), 'uploadResult': 0, 'downloadResult': 0, 'ping': -1 }
         
-        s.download()
-        s.upload()
+        
 		
         results = s.results.dict()
         pingResult = results['ping']
