@@ -3,11 +3,12 @@ import numpy as np
 import gnuplotlib as gp
 import csv
 from os import remove
+from optparse import OptionParser
 
 
-def get_results():
+def get_results(date=1):
     today = datetime.date.today()
-    yesterday = today - datetime.timedelta(1)
+    yesterday = today - datetime.timedelta(date)
     with open("speedresults.csv", "r") as csvfile:
         reader = csv.DictReader(csvfile)
         yester = yesterday.strftime('%Y-%m-%d')
@@ -33,9 +34,9 @@ def plotter(data, field):
     remove("temp.txt")
     return
 
-def uptime():
+def uptime(date=1):
     today = datetime.date.today()
-    yesterday = today - datetime.timedelta(1)
+    yesterday = today - datetime.timedelta(date)
     with open("pingresults.csv", "r") as csvfile:
         reader = csv.DictReader(csvfile)
         yester = yesterday.strftime('%Y-%m-%d')
@@ -45,15 +46,19 @@ def uptime():
                 results.append(row)
     return results
     
-def main():
-    data = get_results()
+def main(date, plot):
+    data = get_results(date)
     for cur in ['Download', 'Upload']:
         anal = analysis(data, cur)
         print "{}:\n\tAverage: {}\n\tMax: {}\n\tMin: {}".format(cur, anal['mean'], anal['max'], anal['min'])
-        plotter(data, cur)
-    ping = uptime()
+        if plot: plotter(data, cur)
+    ping = uptime(date)
     print "Total downtime: {} Minutes\nPercent Uptime: {}%".format(len(ping) - sum([int(x['Success']) for x in ping]), "{0:.2f}".format(float(sum([float(x['Success']) for x in ping])) / float(len(ping)) * 100))
     return
     
 if __name__ == "__main__":
-    main()
+    option_parser = OptionParser(usage="usage: %prog [flags]")
+    option_parser.add_option('-d', '--date', action='store', dest='date', default=1, type="int", help='How many days back you want to run on the data.')
+    option_parser.add_option('-p', '--plot', action='store_true', dest='plot', help='Plot the upload and download speed over the course of the day.')
+    (options, args) = option_parser.parse_args()
+    main(options.date, options.plot)
