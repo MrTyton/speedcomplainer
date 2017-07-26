@@ -28,7 +28,13 @@ def analysis(data, field):
 def plotter(data, field):
     if field not in data[0].keys():
         raise Exception("Fieldname not found.")
-    gp.plot((np.array(range(len(data))), np.array([float(x[field]) for x in data]), {'with': 'lines'}), terminal = 'dumb 200, 40', unset = 'grid', ascii=True, output="temp.txt")
+        
+    def convert(datum):
+        time = datum['Time'].split(":")
+        time = float(time[0]) + float(time[1])/60.
+        return time
+    
+    gp.plot((np.array([convert(datum) for datum in data]), np.array([float(x[field]) for x in data]), {'with': 'lines'}), terminal = 'dumb 200, 40', unset = 'grid', ascii=True, output="temp.txt", xlabel="Hour (24)", y2label="Speed (Mb/s)", set="xtics 1")
     with open("temp.txt", "r") as fp:
         print fp.read()
     remove("temp.txt")
