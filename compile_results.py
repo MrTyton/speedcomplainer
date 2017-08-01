@@ -34,7 +34,7 @@ def plotter(data, field):
         time = float(time[0]) + float(time[1])/60.
         return time
     
-    gp.plot((np.array([convert(datum) for datum in data]), np.array([float(x[field]) for x in data]), {'with': 'lines'}), terminal = 'dumb 200, 40', unset = 'grid', ascii=True, output="temp.txt", xlabel="Hour (24)", y2label="Speed (Mb/s)", set="xtics 1")
+    gp.plot((np.array([convert(datum) for datum in data]), np.array([float(x[field]) for x in data]), {'with': 'lines'}), terminal = 'dumb 200, 50', unset = 'grid', ascii=True, output="temp.txt", xlabel="Hour (24)", y2label="Speed (Mb/s)", set=("xtics 1", "ytics 5"), yrange=[0, 100])
     with open("temp.txt", "r") as fp:
         print fp.read()
     remove("temp.txt")
